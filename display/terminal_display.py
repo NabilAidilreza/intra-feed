@@ -19,16 +19,19 @@ def log_error(message: str):
 SERVICE_COLORS = {
     "GMAIL": "green",
     "TELEGRAM": "bright_cyan",
-    "OUTLOOK": "magenta",
+    "OUTLOOK": "blue",  # softer than bright red, still distinct
 }
 
 # Content colors for contrast (first, second, third fields)
 CONTENT_COLORS = {
     "GMAIL": {"field1": "bright_cyan", "field2": "yellow", "field3": "bright_magenta"},
     "TELEGRAM": {"field1": "bright_green", "field2": "bright_yellow", "field3": "bright_cyan"},
-    "OUTLOOK": {"field1": "bright_white", "field2": "yellow", "field3": "bright_magenta"},
+    "OUTLOOK": {
+        "field1": "yellow",  
+        "field2": "bright_blue",     
+        "field3": "bright_white"     
+    },
 }
-
 def display_message(message_data, service_name="SERVICE", pause=1):
     """
     Generalized display for multiple services.
@@ -57,7 +60,7 @@ def display_message(message_data, service_name="SERVICE", pause=1):
         sender_name = m.group("name").strip() or "Unknown"
         sender_email = m.group("email").strip()
 
-    MAX_MSG_WIDTH = 130  # width of main message before timestamp
+    MAX_MSG_WIDTH = 120  # width of main message before timestamp
 
     # Build Rich text
     line = Text()
@@ -65,7 +68,13 @@ def display_message(message_data, service_name="SERVICE", pause=1):
 
     # Add Email Account line if it's email service
     if service_name.upper() in ["GMAIL", "OUTLOOK"]:
-        line.append(f"Email Acct: {fields0_raw}\n", style="bold bright_magenta")
+        if field4_raw != "NIL":
+            line.append(f"Email Acct: {fields0_raw} [", style="bold bright_magenta")
+            line.append(f"{field4_raw}", style="bold white")
+            line.append("]\n", style="bold bright_magenta")
+        else:
+            line.append(f"Email Acct: {fields0_raw}\n", style="bold bright_magenta")
+
 
     # Build main message part
     main_msg = Text()
@@ -81,14 +90,12 @@ def display_message(message_data, service_name="SERVICE", pause=1):
         padding = MAX_MSG_WIDTH - msg_len
         main_msg.append(" " * padding)
 
-    # Append timestamp at fixed column
-    if field4_raw != "NIL":
-        main_msg.append(f"[{field4_raw}]", style="bold white")
+
 
     line.append(main_msg)
 
     # Print line + separator
     console.print(line)
-    console.print(Text("-" * 130, style="dim green"))
+    console.print(Text("-" * 120, style="dim green"))
 
     time.sleep(pause)

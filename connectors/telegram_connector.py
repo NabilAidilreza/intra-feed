@@ -104,7 +104,6 @@ async def monitor_telegram(api_id, api_hash, target_chat_ids):
 
     console.print("\n[bright_black]Scan complete. Monitoring started...[/bright_black]\n")
     console.rule("[bold green]•[/bold green]")
-    console.print("\n[bright_yellow]Awaiting first message...[/bright_yellow]\n")
     # Run the live monitor
     await client.run_until_disconnected()
 

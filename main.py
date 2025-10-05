@@ -4,12 +4,13 @@ from dotenv import load_dotenv
 import asyncio
 from connectors.gmail_connector import get_gmail_service, monitor_new_emails
 from connectors.telegram_connector import monitor_telegram 
+from connectors.outlook_connector import monitor_new_outlook_emails, check_token_and_get_active_email
 from display.terminal_display import *
 
 load_dotenv()
 AUTH_FOLDER = "auth"
 
-# ------------------ Gmail Setup ------------------
+# ------------------ Gmail / Outlook Setup ------------------
 
 async def monitor_account(account_email, cred_file, token_file, interval=60):
     service = get_gmail_service(cred_file, token_file)
@@ -21,6 +22,25 @@ async def monitor_account(account_email, cred_file, token_file, interval=60):
     loop = asyncio.get_event_loop()
     await loop.run_in_executor(None, monitor_new_emails, service, callback, interval)
 
+async def monitor_outlook(outlook_email,client_id, tenant_id, interval=60, max_results=10):
+    """
+    Async wrapper to run synchronous Outlook monitor in an executor.
+    """
+    def callback(email_data):
+        email_data["account"] = outlook_email
+        display_message(email_data, service_name="OUTLOOK")
+
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(
+        None,
+        monitor_new_outlook_emails,
+        callback,
+        client_id,
+        tenant_id,
+        interval,
+        max_results
+    )
+
 def main_banner():
     # Title
     title = Text(f"\n📨 intra-feed \n", style="bold cyan")
@@ -29,9 +49,11 @@ def main_banner():
     console.print("A personal feed aggregator that unifies Telegram, Gmail, and Outlook messages in a single terminal log.\n")
     # Info lines
     info1 = Text("⏱ Gmail updates every 1 minute", style="green")
-    info2 = Text("💬 Telegram updates in real-time", style="magenta")
+    info2 = Text("⏱ Outlook updates every 1 minute", style="blue")
+    info3 = Text("💬 Telegram updates in real-time", style="magenta")
     console.print(info1)
     console.print(info2)
+    console.print(info3)
 
 def check_gmail_settings(accounts):
     console.print("\n> Initializing Gmail monitor...", style="bold green")
@@ -67,6 +89,17 @@ def check_gmail_settings(accounts):
             line.append(f"[{cred_file}]", style="bright_black")
         console.print(line)
 
+def check_outlook_settings():
+    console.print("\n> Initializing Outlook monitor...", style="bold blue")
+    outlook_email = check_token_and_get_active_email()
+    # Build line to print
+    line = Text()
+    line.append("→ ", style="bright_green")
+    line.append(outlook_email, style="bold white")
+    console.print(line)
+    return outlook_email
+
+
 # ------------------ Main ------------------
 async def main():
     console = Console()
@@ -79,6 +112,21 @@ async def main():
     except json.JSONDecodeError as e:
         log_error(f"❌ Invalid JSON: {e}")
         raise RuntimeError("Invalid JSON")
+    
+    # ------------------ Outlook Config ------------------
+    outlook_cli_id = os.getenv("CLIENT_ID")
+    outlook_ten_id = os.getenv("TENANT_ID")
+
+    if outlook_cli_id:
+        log_success("✅ Outlook Client ID exists!")
+    else:
+        log_error("❌ Outlook Client ID doesn't exist!")
+        raise RuntimeError("Refer to logs.")
+
+    if outlook_ten_id:
+        log_success("✅ Outlook Tenant ID exists!")
+    else:
+        log_error("❌ Outlook Tenant ID doesn't exist! (But not in use ✅)")
 
     # ------------------ Telegram Config ------------------
     tg_api_id = os.getenv("TG_API_ID")
@@ -105,17 +153,20 @@ async def main():
 
     log_success("✅ Environment variables OK!")
 
+    main_banner()
+    check_gmail_settings(accounts)
+    outlook_email = check_outlook_settings()
+
     # Add gmail task
     tasks = [
         monitor_account(account, creds["Credentials"], creds["Token"], interval=60)
         for account, creds in accounts.items()
     ]
+    # Outlook task
+    tasks.append(monitor_outlook(outlook_email,outlook_cli_id, outlook_ten_id,interval=60))
 
     # Add telegram task
     tasks.append(monitor_telegram(tg_api_id, tg_api_hash, tg_chat_ids))
-
-    main_banner()
-    check_gmail_settings(accounts)
 
     try:
         await asyncio.gather(*tasks)

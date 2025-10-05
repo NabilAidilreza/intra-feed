@@ -108,6 +108,7 @@ def get_unread_emails(service, max_results=10):
     
 def monitor_new_emails(service, callback, interval=60, max_results=10): # callback is print
     seen_email_ids = set()
+    sleep(3)
     while True:
         unread_emails = get_unread_emails(service, max_results)
         new_emails = [email for email in unread_emails if email['id'] not in seen_email_ids]
