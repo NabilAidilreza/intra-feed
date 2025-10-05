@@ -42,6 +42,8 @@ GMAIL_ACCOUNTS='{
   "user2@gmail.com": {"Credentials": "something_credentials.json", "Token": "token2.json"},
   ... if want to add more
 }'
+CLIENT_ID=""
+TENANT_ID=""
 TG_API_ID=0
 TG_API_HASH=''
 TG_CHAT_IDS=[chat_id1, chat_id2, ...]
