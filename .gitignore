@@ -1,0 +1,22 @@
+# Ignore environment & credentials
+.env
+*.json
+*.log
+*.session
+*.session-journal
+
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environment folders
+venv/
+env/
+.venv/
+
+# OS / IDE specific files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
