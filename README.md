@@ -49,7 +49,8 @@ TG_API_HASH=''
 TG_CHAT_IDS=[chat_id1, chat_id2, ...]
 ```
 
-- `GMAIL_ACCOUNTS`: JSON object mapping Gmail/Outlook accounts to their credentials and token files.  
+- `GMAIL_ACCOUNTS`: JSON object mapping Gmail/Outlook accounts to their credentials and token files.
+- `CLIENT_ID` / `TENANT_ID`: Your Microsoft Azure App credentials (Outlook).  
 - `TG_API_ID` / `TG_API_HASH`: Your Telegram API credentials.  
 - `TG_CHAT_IDS`: List of Telegram chat IDs to monitor.
 
