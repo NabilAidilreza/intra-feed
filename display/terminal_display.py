@@ -12,6 +12,9 @@ def log_success(message: str):
 def log_error(message: str):
     console.print(Text(message, style="bold red"))
 
+def log_warning(message: str):
+    console.print(Text(message, style="bold yellow"))
+ 
 
 # ------------------------------------------------------
 
@@ -89,8 +92,6 @@ def display_message(message_data, service_name="SERVICE", pause=1):
     if msg_len < MAX_MSG_WIDTH:
         padding = MAX_MSG_WIDTH - msg_len
         main_msg.append(" " * padding)
-
-
 
     line.append(main_msg)
 
