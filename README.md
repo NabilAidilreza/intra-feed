@@ -1,5 +1,5 @@
 
-# Personal Unified Feed Aggregator
+# intra-feed
 
 A **terminal-based personal feed aggregator** that collects your messages from **Telegram**, **Gmail**, and **Outlook**, and displays them in a live log. Think of it as a personal RSS feed for all your messages.
 
@@ -24,9 +24,12 @@ cd personal-unified-feed
 
 ### 2. Create your credentials
 
-- **Gmail / Outlook:**  
+- **Gmail:**  
   Set up a **Google Cloud Console OAuth Client** and download your credentials JSON file.
-  
+
+- **Outlook:**  
+  Set up a **Microsoft Azure App Registration** and obtain your client and tenant ID credentials.
+
 - **Telegram:**  
   Create a **Telegram API App** to obtain your `api_id` and `api_hash`.
 
