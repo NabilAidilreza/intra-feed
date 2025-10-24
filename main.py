@@ -132,8 +132,8 @@ def main_banner():
     console.print(title)
     console.print("A personal feed aggregator that unifies Telegram, Gmail, and Outlook messages in a single terminal log.\n")
     # Info lines
-    info1 = Text("⏱ Gmail updates every 1 minute", style="green")
-    info2 = Text("⏱ Outlook updates every 1 minute", style="blue")
+    info1 = Text("⏱  Gmail updates every 1 minute", style="green")
+    info2 = Text("⏱  Outlook updates every 1 minute", style="blue")
     info3 = Text("💬 Telegram updates in real-time", style="magenta")
     console.print(info1)
     console.print(info2)
@@ -210,21 +210,6 @@ async def main():
     except KeyboardInterrupt:
         log_error("\n🛑 Aggregator stopped by user.", justify="center")
 
+## If token cant be read, just delete token?.json (s) and outlooktoken.json to regen
 if __name__ == "__main__":
     asyncio.run(main())
-
-
-# # Get Chat IDS
-# from telethon import TelegramClient
-# client = TelegramClient("session_name", tg_api_id, tg_api_hash)
-
-# async def list_chats():
-#     async for dialog in client.iter_dialogs():
-#         # dialog.name = chat/group name
-#         # dialog.id = chat ID
-#         print(f"Name: {dialog.name}, ID: {dialog.id}, Type: {'Group' if dialog.is_group else 'Private'}")
-
-
-
-# with client:
-#     client.loop.run_until_complete(list_chats())
