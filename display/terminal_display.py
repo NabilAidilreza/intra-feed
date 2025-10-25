@@ -1,7 +1,7 @@
+import re
+import time
 from rich.console import Console
 from rich.text import Text
-import time
-import re
 
 console = Console()
 

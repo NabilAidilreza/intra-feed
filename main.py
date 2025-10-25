@@ -1,12 +1,18 @@
 import os
 import json
 import asyncio
+from multiprocessing import Process
 from pathlib import Path
 from dotenv import load_dotenv
 from connectors.gmail_connector import get_gmail_service, monitor_new_emails
-from connectors.telegram_connector import monitor_telegram 
-from connectors.outlook_connector import monitor_new_outlook_emails, check_token_and_get_active_email
-from display.terminal_display import *
+from connectors.telegram_connector import monitor_telegram,login
+from connectors.outlook_connector import monitor_new_outlook_emails, check_token_and_get_active_email,acquire_token
+from display.terminal_display import (
+    log_success, log_error, log_warning,
+    display_message,          # your existing function
+    Console,
+    Text
+)
 
 load_dotenv()
 ENV_FILE_PATH = Path(".env")
@@ -74,6 +80,12 @@ def validate_env_variables():
 
     return accounts,outlook_cli_id,outlook_ten_id,tg_api_id,tg_api_hash,tg_chat_ids
 
+def load_tele_env():
+    tg_api_id = os.getenv("TG_API_ID")
+    tg_api_hash = os.getenv("TG_API_HASH")
+    tg_chat_ids = json.loads(os.getenv("TG_CHAT_IDS"))
+    return tg_api_id,tg_api_hash,tg_chat_ids
+
 
 def load_and_check_env():
     if not ENV_FILE_PATH.is_file():
@@ -123,9 +135,13 @@ async def monitor_outlook(outlook_email,client_id, tenant_id, interval=60, max_r
         max_results
     )
 
+def run_telegram(api_id, api_hash, chat_ids):
+    asyncio.run(monitor_telegram(api_id, api_hash, chat_ids))
+
 # ------------------ Gmail / Outlook Setup ------------------
 
 def main_banner():
+    console = Console()
     # Title
     title = Text(f"\n📨 intra-feed \n", style="bold cyan")
     title.stylize("bold underline", 0, len(title))
@@ -140,6 +156,7 @@ def main_banner():
     console.print(info3)
 
 def check_gmail_settings(accounts):
+    console = Console()
     console.print("\n> Initializing Gmail monitor...", style="bold green")
 
     # Normalize to (email, details) pairs whether accounts is a dict or a list
@@ -173,6 +190,7 @@ def check_gmail_settings(accounts):
         console.print(line)
 
 def check_outlook_settings():
+    console = Console()
     console.print("\n> Initializing Outlook monitor...", style="bold blue")
     outlook_email = check_token_and_get_active_email()
     # Build line to print
@@ -183,33 +201,42 @@ def check_outlook_settings():
     return outlook_email
 
 
+def redo_outlook_token():
+    outlook_cli_id = os.getenv("CLIENT_ID")
+    acquire_token(outlook_cli_id)
+
 # ------------------ Main ------------------
 async def main():
     console = Console()
     # Intial set up 
     console.print("Checking environment variables...", style="bold #FFA500")
-    accounts,outlook_cli_id,outlook_ten_id,tg_api_id,tg_api_hash,tg_chat_ids = load_and_check_env()
+    accounts,outlook_cli_id,outlook_ten_id,a,b,c = load_and_check_env()
     main_banner()
     check_gmail_settings(accounts)
     outlook_email = check_outlook_settings()
 
-    # Add Gmail task
+
+    # Gmail + Outlook tasks
     tasks = [
         monitor_account(account, creds["Credentials"], creds["Token"], interval=60)
         for account, creds in accounts.items()
     ]
-
-    # Outlook task
-    tasks.append(monitor_outlook(outlook_email,outlook_cli_id, outlook_ten_id,interval=60))
-
-    # Add Telegram task
-    tasks.append(monitor_telegram(tg_api_id, tg_api_hash, tg_chat_ids))
+    tasks.append(monitor_outlook(outlook_email, outlook_cli_id, outlook_ten_id, interval=60))
 
     try:
         await asyncio.gather(*tasks)
     except KeyboardInterrupt:
         log_error("\n🛑 Aggregator stopped by user.", justify="center")
 
+
 ## If token cant be read, just delete token?.json (s) and outlooktoken.json to regen
 if __name__ == "__main__":
+    tg_api_id, tg_api_hash, tg_chat_ids = load_tele_env()
+
+    # Telegram process (pushes messages to queue)
+    tg_proc = Process(target=run_telegram, args=(tg_api_id, tg_api_hash, tg_chat_ids))
+    tg_proc.start()
+
+    # Start main asyncio monitors in this terminal
     asyncio.run(main())
+

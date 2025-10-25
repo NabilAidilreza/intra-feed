@@ -1,13 +1,13 @@
+import os
 import asyncio
-from time import sleep
 from telethon import TelegramClient, events
 from telethon.tl.types import MessageService
-from display.terminal_display import display_message,Console,Text
+from display.terminal_display import Console,display_message
 
 
 def login(): # If .session file is lost
-    api_id = 0
-    api_hash = ''
+    api_id = os.getenv("TG_API_ID")
+    api_hash = os.getenv("TG_API_HASH")
     client = TelegramClient('session_name', api_id, api_hash)
 
     async def main():
